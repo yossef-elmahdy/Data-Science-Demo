@@ -182,6 +182,11 @@ def downlad_extracted_img(base, save_path):
     base['imageRef'] = imgName + '0' + '.jpg'
     base['imageRefExtra'] = []
     n = len(imageURLs)
+    # Prevent any duplicated images by just downloading half of them
+    if n%2 == 0: 
+        n = n//2
+    else: 
+        n = n//2 + 1
     for i in range(n):
         imageURL = imageURLs[i]
         r = requests.get(imageURL, stream=True)
@@ -202,10 +207,10 @@ def extract_people_info_download_image(pageURL, save_path):
         peapleInfo.append(personInfo)
     return peapleInfo
 
-def ExtractMissingPeopleInfoT0Json(save_path):
+def ExtractMissingPeopleInfoT0Json(save_path, number_of_pages=1):
     page = 1
     data = []
-    while page <= 1:
+    while page <= number_of_pages:
         data += extract_people_info_download_image(f"https://atfalmafkoda.com/ar/seen-him?page={page}&per-page=18", save_path)
         page+=1
     print("="*70)

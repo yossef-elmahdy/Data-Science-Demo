@@ -172,12 +172,12 @@ def extract_people_info(base):
             base['image'].append("https://atfalmafkoda.com/" + photo['src'])
     return base
 
-def downlad_extracted_img(base):
+def downlad_extracted_img(base, save_path):
     imageURLs = base['image']
     id = base['id']
     sub = len(str(id))
     fileName = base['Name']
-    os.makedirs((f'./Scrapped_Data/{fileName}'), exist_ok=True)
+    os.makedirs((f'{save_path}/{fileName}'), exist_ok=True)
     imgName = (4 - sub) * '0' + str(id) + '_'
     base['imageRef'] = imgName + '0' + '.jpg'
     base['imageRefExtra'] = []
@@ -189,27 +189,31 @@ def downlad_extracted_img(base):
         currentImagName= imgName + str(i) + '.jpg'
         print(f"Downloading {fileName} ---- {currentImagName} .....")
         base['imageRefExtra'].append(currentImagName)
-        with open(f'./Scrapped_Data/{fileName}/{currentImagName}', 'wb') as f:
+        with open(f'{save_path}/{fileName}/{currentImagName}', 'wb') as f:
             shutil.copyfileobj(r.raw, f)
+    
 
-def extract_people_info_download_image(pageURL):
+def extract_people_info_download_image(pageURL, save_path):
     cnt = extract_people_url(pageURL)
     peapleInfo = []
     for base in cnt:
         personInfo = extract_people_info(base)
-        downlad_extracted_img(personInfo)
+        downlad_extracted_img(personInfo, save_path)
         peapleInfo.append(personInfo)
     return peapleInfo
 
-def ExtractMissingPeopleInfoT0Json():
+def ExtractMissingPeopleInfoT0Json(save_path):
     page = 1
     data = []
     while page <= 1:
-        data +=extract_people_info_download_image(f"https://atfalmafkoda.com/ar/seen-him?page={page}&per-page=18")
+        data += extract_people_info_download_image(f"https://atfalmafkoda.com/ar/seen-him?page={page}&per-page=18", save_path)
         page+=1
-    with open("missing_peaple.json",'w', encoding='utf-8') as file:
+    print("="*70)
+    print("\n==>All images are scrapped and downloaded successfully in directory: {}".format(save_path))
+    with open(f"{save_path}/missing_people.json",'w', encoding='utf-8') as file:
         json.dump(data, file, indent=4, ensure_ascii = False)
+    print("\n==>JSON file with all scrapped data is successfully downloaded in directory: {}".format(save_path))
 
 if __name__ == '__main__': 
-    SAVE_DIR = "./Scrapped_Data"
-    ExtractMissingPeopleInfoT0Json()
+    SAVE_DIR = r"C:\Users\yosse\Desktop\Graduation Project\Implementation\Data-Science\Scrapping Codes\Scrapped_Data"
+    ExtractMissingPeopleInfoT0Json(SAVE_DIR)

@@ -265,7 +265,7 @@ def mapping_to_english(name):
         except: 
             mapped_name += c
     
-    return mapped_name
+    return mapped_name.title()
 
 
 def extract_people_info(base, mapping_method="mapping"):
@@ -408,5 +408,5 @@ def ExtractMissingPeopleInfoT0Json(save_path="./Scrapped_Data", number_of_pages=
     print("\n==>JSON file with all scrapped data is successfully downloaded in directory: {}".format(save_path))
 
 if __name__ == '__main__': 
-    SAVE_DIR = r"C:\Users\yosse\Desktop\Graduation Project\Implementation\Data-Science\Scrapping Codes\Scrapped_Data"
+    SAVE_DIR = r".\Scrapped_Data"
     ExtractMissingPeopleInfoT0Json(SAVE_DIR)

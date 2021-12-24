@@ -16,16 +16,43 @@ class MafQudRecognition:
         self.people = []
         self.features = []
         self.ids = []
-        self.face_location = []
+        self.face_locations = []
         self.knn_clf = None
 
-    def import_encodings(self):
-        self.ids = np.load('ids.npy', allow_pickle=True)
+    def import_encodings(self, ids_DIR='ids.npy', people_DIR='people.npy', fetaures_DIR='feature.npy', face_locations_DIR='face_location.npy'):
+        """
+        Import the .npy saved data to Mafqud_Recongition instance. 
+
+        Parameters
+        ----------
+        ids_DIR : str, optional
+            directory of ids.npy. The default is 'ids.npy'.
+        people_DIR : str, optional
+            directory of people.npy. The default is 'people.npy'.
+        fetaures_DIR : str, optional
+            directory of feature.npy. The default is 'feature.npy'.
+
+        Returns
+        -------
+        None.
+
+        """
+        print("Importing the data ...")
+        self.ids = np.load(ids_DIR, allow_pickle=True)
         self.ids = self.ids.astype('str')
-        self.people = np.load('people.npy', allow_pickle=True)
+        self.people = np.load(people_DIR, allow_pickle=True)
         self.people = self.people.astype('str')
-        self.features = np.load('feature.npy', allow_pickle=True)
+        self.features = np.load(fetaures_DIR, allow_pickle=True)
         self.features= self.features.astype('float')
+        self.face_locations = np.load(face_locations_DIR, allow_pickle=True)
+        self.face_locations = list(self.face_locations)
+        print("Data imported successfully!")
+        print("="*70)
+        print("Data Summary: ")
+        print("Number of people: {}".format(len(self.people)))
+        print("Number of features: {}".format(len(self.features)))
+        print("Number of ids: {}".format(len(self.ids)))
+        print("Number of face_locations: {}".format(len(self.face_locations)))
 
     def append_encoding(self, imgDir, id, name):
         img = face_recognition.load_image_file(imgDir)
@@ -124,7 +151,7 @@ class MafQudRecognition:
             List of names of people
         features : List
             List of face encodings of each person
-        face_location : List
+        face_locations : List
             List of face location
         """
         for person in os.listdir(images_DIR):
@@ -138,17 +165,23 @@ class MafQudRecognition:
                 print(f"Loading Image: {img}")
                 face_coordinates, face_encoding = self.detect_face_location(img, searching_model=face_loc_model)
                 if face_coordinates is not None:
-                    self.face_location.append(face_coordinates)
+                    self.face_locations.append(face_coordinates)
                     self.features.append(face_encoding)
                     self.ids.append(id)
         print("\n")            
-        np.save('face_location.npy', np.array(self.face_location, dtype=object))
+        np.save('face_locations.npy', np.array(self.face_locations, dtype=object))
         np.save('feature.npy', np.array(self.features, dtype=float))
         np.save('ids.npy', np.array(self.ids, dtype=str))
         np.save('people.npy', np.array(self.people, dtype=str))
         print("="*70)
+        print("Data Summary: ")
+        print("Number of people: {}".format(len(self.people)))
+        print("Number of features: {}".fromat(len(self.features)))
+        print("Number of ids: {}".format(len(self.ids)))
+        print("Number of face_locations: {}".format(len(self.face_locations)))
+        print("="*70)
         print("Data is successfully created and loaded in : {:.2f}s".format(time()-t0))
-        return self.ids, self.people, self.features, self.face_location
+        return self.ids, self.people, self.features, self.face_locations
 
 
     def training_classifier(self, model_save_path=None, train_test=True, n_neighbors=None, knn_algo='ball_tree', verbose=False):

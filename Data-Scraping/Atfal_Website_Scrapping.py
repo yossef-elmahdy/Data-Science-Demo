@@ -408,5 +408,5 @@ def ExtractMissingPeopleInfoT0Json(save_path="./Scrapped_Data", number_of_pages=
     print("\n==>JSON file with all scrapped data is successfully downloaded in directory: {}".format(save_path))
 
 if __name__ == '__main__': 
-    SAVE_DIR = r".\Scrapped_Data"
+    SAVE_DIR = r".\Scrapped_Data"   # You may need to change the SAVE_DIR to another directory
     ExtractMissingPeopleInfoT0Json(SAVE_DIR)

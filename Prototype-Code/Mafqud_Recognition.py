@@ -106,13 +106,13 @@ class MafQudRecognition:
             print("Try first with hog ...")
             face_coordinates = face_recognition.face_locations(image, model="hog")
             if len(face_coordinates) >= 1: 
-                face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)[0]
+                face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)
                 return face_coordinates, face_encoding
             else:
                 print("Not detected with hog, try again with cnn ...")
                 face_coordinates = face_recognition.face_locations(image, model="cnn")
                 if len(face_coordinates) >= 1: 
-                    face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)[0]
+                    face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)
                     return face_coordinates, face_encoding
                 else: 
                     print("No face detected at all with {} (hog & cnn) models".format(searching_model))
@@ -120,7 +120,7 @@ class MafQudRecognition:
         else: 
             face_coordinates = face_recognition.face_locations(image, model=searching_model)
             if len(face_coordinates) >= 1: 
-                face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)[0]
+                face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates) ###
                 return face_coordinates, face_encoding
             else: 
                 print("No face detected with ({}) model".format(searching_model))
@@ -166,7 +166,7 @@ class MafQudRecognition:
                 face_coordinates, face_encoding = self.detect_face_location(img, searching_model=face_loc_model)
                 if face_coordinates is not None:
                     self.face_locations.append(face_coordinates)
-                    self.features.append(face_encoding)
+                    self.features.append(face_encoding[0])
                     self.ids.append(id)
         print("\n")            
         np.save('face_locations.npy', np.array(self.face_locations, dtype=object))
@@ -222,7 +222,7 @@ class MafQudRecognition:
 
         return self.knn_clf
 
-    def predict(self, unkown_img_path, model_path=None, distance_threshold=0.6):
+    def predict(self, unkown_img_path, model_path=None, face_loc_model="hog", distance_threshold=0.6):
         """
         Recognize the person in picture.
 
@@ -239,22 +239,61 @@ class MafQudRecognition:
         (pred, loc): tuple
             the location of the face and predicted id
         """
+        print("Searching For Matching Person ...")
+        print("Please Wait ...")
+        t0 = time()
         if self.knn_clf is None:
             with open(model_path, 'rb') as f:
                 self.knn_clf = pickle.load(f)
-
-        unkown_img = face_recognition.load_image_file(unkown_img_path)
-        unkown_face_locations = face_recognition.face_locations(unkown_img)
-        if len(unkown_face_locations) >= 1:
-            faces_encodings = face_recognition.face_encodings(unkown_img, known_face_locations=unkown_face_locations)
-        else:
-            print("No face detected")
-            return
-        closest_distances = self.knn_clf.kneighbors(faces_encodings, n_neighbors=1)
-        are_matches = [closest_distances[0][i][0] <= distance_threshold for i in range(len(unkown_face_locations))]
-
-        return [(pred, loc) if rec else ("unknown", loc) for pred, loc, rec in
-                zip(self.knn_clf.predict(faces_encodings), unkown_face_locations, are_matches)]
+                
+        face_location, face_encoding = self.detect_face_location(unkown_img_path, searching_model=face_loc_model)
+        if face_location is not None:
+            closest_distances = self.knn_clf.kneighbors(face_encoding, n_neighbors=1)
+            are_matches = [closest_distances[0][i][0] <= distance_threshold for i in range(len(face_location))]
+    
+            matching = [(pred, loc) if rec else ("unknown", loc) for pred, loc, rec in
+                zip(self.knn_clf.predict(face_encoding), face_location, are_matches)]
+            
+            if matching[0][0] == "unknown": 
+                print("Unknown person")
+            else:
+                print("Finshed searching in {:.2f}s".format(time()-t0))
+                print("Found person with id: {}".format(matching[0][0]))
+                print("Name: {}".format(self.people[int(matching[0][0])]))
+                
+            return matching
+        else: 
+            return None
+        
+        
+        # unkown_img = face_recognition.load_image_file(unkown_img_path)
+        # unkown_face_locations = face_recognition.face_locations(unkown_img, model=face_loc_model)
+        # if len(unkown_face_locations) >= 1:
+        #     faces_encodings = face_recognition.face_encodings(unkown_img, known_face_locations=unkown_face_locations)
+        #     print(faces_encodings)
+        # else:
+        #     print("No Face Detected")
+        #     return
+        # closest_distances = self.knn_clf.kneighbors(faces_encodings, n_neighbors=1)
+        # are_matches = [closest_distances[0][i][0] <= distance_threshold for i in range(len(unkown_face_locations))]
+        
+        # matching = [(pred, loc) if rec else ("unknown", loc) for pred, loc, rec in
+        #         zip(self.knn_clf.predict(faces_encodings), unkown_face_locations, are_matches)]
+        
+        # print("Finshed searching in {:.2f}s".format(time()-t0))
+        # print("Found person with id = {}".format(matching[0][0]))
+        # return matching
+        
+            
+        
+        # unkown_img = face_recognition.load_image_file(unkown_img_path)
+        # unkown_face_locations = face_recognition.face_locations(unkown_img)
+        # if len(unkown_face_locations) >= 1:
+        #     faces_encodings = face_recognition.face_encodings(unkown_img, known_face_locations=unkown_face_locations)
+        # else:
+        #     print("No face detected")
+        #     return
+        
 
     def translate_content(self, name_english, from_language='ar', to_language='en'):
         """

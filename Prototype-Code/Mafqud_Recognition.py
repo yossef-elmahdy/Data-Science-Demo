@@ -51,16 +51,70 @@ class MafQudRecognition:
         self.people = self.people.astype('str')
         self.people = np.append(self.people, name)
         #self.training_classifier("knn_model.clf", n_neighbors=2)
+    
+    def detect_face_location(self, image_path, searching_model="hog"):
+        """
+        Detect the face location and return the location and encoding. 
 
-    def create_encodings(self, DIR, face_loc_model="cnn"):
+        Parameters
+        ----------
+        image_path : str
+             The directory of the images data..
+         searching_model : str, optional 
+            The method will be used to search for the location of the face. default is "hog". 
+            Methods: 
+                - **hog**: for faster search, but less accurate results. 
+                - **cnn**: for more accurate results, but slower search. 
+                - **mix**: will use hog first, if none then will use cnn (preferable). 
+        Returns
+        -------
+        face_coordinates : tuple
+            the coordinates of the location of face, if not found return None.
+        face_encoding : list
+            the encodings of the face, if not found return None.
+
+        """
+        image = face_recognition.load_image_file(image_path) 
+        if searching_model == "mix":
+            print("Try first with hog ...")
+            face_coordinates = face_recognition.face_locations(image, model="hog")
+            if len(face_coordinates) >= 1: 
+                face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)[0]
+                return face_coordinates, face_encoding
+            else:
+                print("Not detected with hog, try again with cnn ...")
+                face_coordinates = face_recognition.face_locations(image, model="cnn")
+                if len(face_coordinates) >= 1: 
+                    face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)[0]
+                    return face_coordinates, face_encoding
+                else: 
+                    print("No face detected at all with {} (hog & cnn) models".format(searching_model))
+                    return None, None
+        else: 
+            face_coordinates = face_recognition.face_locations(image, model=searching_model)
+            if len(face_coordinates) >= 1: 
+                face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)[0]
+                return face_coordinates, face_encoding
+            else: 
+                print("No face detected with ({}) model".format(searching_model))
+                return None, None
+                    
+            
+    def create_data(self, images_DIR, face_loc_model="hog"):
         """
         Find face coordinates and extract its encodings.
         Save encodings in feature.npy, ids in ids.npy and names in people.npy in same directory.
 
         Parameters
         ----------
-        DIR : str
-            The path  of the training data
+        images_DIR : str
+            The directory of the images data.
+        face_loc_model : str, optional 
+            The method will be used to search for the location of the face. default is "hog". 
+            Methods: 
+                - **hog**: for faster search, but less accurate results. 
+                - **cnn**: for more accurate results, but slower search. 
+                - **mix**: will use hog first, if none then will use cnn (preferable). 
 
         Returns
         -------
@@ -70,35 +124,30 @@ class MafQudRecognition:
             List of names of people
         features : List
             List of face encodings of each person
-        face_location: List
+        face_location : List
             List of face location
         """
-
-
-        for path in os.listdir(DIR):
-            self.people.append(path)
+        for person in os.listdir(images_DIR):
+            self.people.append(person)
         t0 = time()
         print("Loading Dataset \n\n")
         for id, person in enumerate(self.people):
-            print(f"Loading Person: {person} \n")
-            for img in image_files_in_folder(os.path.join(DIR, person)):
+            print("="*70)
+            print(f"Loading Person: {person}")
+            for img in image_files_in_folder(os.path.join(images_DIR, person)):
                 print(f"Loading Image: {img}")
-
-                image = face_recognition.load_image_file(img)
-                face_bounding_boxes = face_recognition.face_locations(image, model=face_loc_model)
-                if len(face_bounding_boxes) >= 1:
-                    encoding = face_recognition.face_encodings(image, known_face_locations=face_bounding_boxes)[0]
-                    self.face_location.append(face_bounding_boxes)
-                    self.features.append(encoding)
+                face_coordinates, face_encoding = self.detect_face_location(img, searching_model=face_loc_model)
+                if face_coordinates is not None:
+                    self.face_location.append(face_coordinates)
+                    self.features.append(face_encoding)
                     self.ids.append(id)
-                else:
-                    print("No face detected")
+        print("\n")            
         np.save('face_location.npy', np.array(self.face_location, dtype=object))
         np.save('feature.npy', np.array(self.features, dtype=float))
         np.save('ids.npy', np.array(self.ids, dtype=str))
         np.save('people.npy', np.array(self.people, dtype=str))
-        t1 = time() - t0
-        print(f"Successfully trained  in : {time() - t0}s")
+        print("="*70)
+        print("Data is successfully created and loaded in : {:.2f}s".format(time()-t0))
         return self.ids, self.people, self.features, self.face_location
 
 

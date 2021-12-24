@@ -8,6 +8,7 @@ import face_recognition
 from sklearn import neighbors
 from translate import Translator
 from sklearn.model_selection import train_test_split
+from arabic_content import ARABIC_MAPPING
 from face_recognition.face_recognition_cli import image_files_in_folder
 
 
@@ -102,6 +103,7 @@ class MafQudRecognition:
 
         """
         image = face_recognition.load_image_file(image_path) 
+        searching_model = searching_model.lower().strip()
         if searching_model == "mix":
             print("Try first with hog ...")
             face_coordinates = face_recognition.face_locations(image, model="hog")
@@ -228,10 +230,16 @@ class MafQudRecognition:
 
         Parameters
         ----------
-        unkown_img_path : string
+        unkown_img_path : str
             Path to image
-        knn_clf : model
-            To directly specify model
+        face_loc_model : str, optional 
+            The method will be used to search for the location of the face. default is "hog". 
+            Methods: 
+                - **hog**: for faster search, but less accurate results. 
+                - **cnn**: for more accurate results, but slower search. 
+                - **mix**: will use hog first, if none then will use cnn (preferable). 
+        model_path : str, optional
+            The path of the saved model (.clf file).
         distance_threshold: float
             Determine the distance
         Returns
@@ -254,6 +262,7 @@ class MafQudRecognition:
             matching = [(pred, loc) if rec else ("unknown", loc) for pred, loc, rec in
                 zip(self.knn_clf.predict(face_encoding), face_location, are_matches)]
             
+            print("="*70)
             if matching[0][0] == "unknown": 
                 print("Unknown person")
             else:
@@ -263,37 +272,35 @@ class MafQudRecognition:
                 
             return matching
         else: 
-            return None
+            return -1
         
         
-        # unkown_img = face_recognition.load_image_file(unkown_img_path)
-        # unkown_face_locations = face_recognition.face_locations(unkown_img, model=face_loc_model)
-        # if len(unkown_face_locations) >= 1:
-        #     faces_encodings = face_recognition.face_encodings(unkown_img, known_face_locations=unkown_face_locations)
-        #     print(faces_encodings)
-        # else:
-        #     print("No Face Detected")
-        #     return
-        # closest_distances = self.knn_clf.kneighbors(faces_encodings, n_neighbors=1)
-        # are_matches = [closest_distances[0][i][0] <= distance_threshold for i in range(len(unkown_face_locations))]
+          
+    def mapping_to_english(self, name):
+        """
+         Mapping the Arabic name to English using list of 
+         pre-written dict according to ARABIC_MAPPING.
+         
+        Parameters
+        ----------
+        name : str
+            list of Arabic names to be mapped.
+    
+        Returns
+        -------
+        names_mapped : str
+            string of the mapped name.
+    
+        """
+        mapped_name = ""
+        for c in name: 
+            try: 
+                mapped_name += ARABIC_MAPPING[c]
+            except: 
+                mapped_name += c
         
-        # matching = [(pred, loc) if rec else ("unknown", loc) for pred, loc, rec in
-        #         zip(self.knn_clf.predict(faces_encodings), unkown_face_locations, are_matches)]
-        
-        # print("Finshed searching in {:.2f}s".format(time()-t0))
-        # print("Found person with id = {}".format(matching[0][0]))
-        # return matching
-        
-            
-        
-        # unkown_img = face_recognition.load_image_file(unkown_img_path)
-        # unkown_face_locations = face_recognition.face_locations(unkown_img)
-        # if len(unkown_face_locations) >= 1:
-        #     faces_encodings = face_recognition.face_encodings(unkown_img, known_face_locations=unkown_face_locations)
-        # else:
-        #     print("No face detected")
-        #     return
-        
+        return mapped_name.title()
+
 
     def translate_content(self, name_english, from_language='ar', to_language='en'):
         """
@@ -323,46 +330,65 @@ class MafQudRecognition:
 
         return name_translated
 
-    def draw_box(self, image, face_location, nameId, unkown=False, frame_thickness=3, font_thickness=2):
+
+    def draw_box(self, image, face_location=None, nameId=None, unknown=False, mapping_method="translating", frame_thickness=3, font_thickness=2):
         """
         Draw a box (rectangle) around the image, and put the name of the predicted person.
         ----------
         image : list
             the image of the person.
-        face_location : list
-            the coordinates of the face of the person.
-        name : string
-            the name of the person.
-        frame_thickness : int
-            the thickness of the frame with which the frame plotted.
-        font_thickness : int
-            thickness of the font with which the name typed.
+        face_location : list, optional.
+            the coordinates of the face of the person. default is None
+        nameId : string, optional
+            the id of the person in ids. default is None
+        unknown : bool, optional 
+            indicating if the person in the photo is unknown. default is False. 
+        mapping_method : str, optional 
+            how to map the arabic name of the person if it is found. default is "translating"
+            Options: 
+                - **translating**: online translating the name using translate open source api. 
+                - **mapping**: offline mapping the Arabic name to English (using ARABIC_MAPPING dict).
+                - **leave**: leave the Arabic name as it is. 
+        frame_thickness : int, optional
+            the thickness of the frame with which the frame plotted. default is 3
+        font_thickness : int, optional
+            thickness of the font with which the name typed. default is 2
         Returns
         -------
         (pred, loc): tuple
             the location of the face and predicted id
         """
-        if not unkown:
+        if not unknown:
             name = self.people[int(nameId)]
+            name = " ".join(name.split()[:2])
+            mapping_method = mapping_method.lower().strip()
+            if mapping_method == "translating": 
+                name = self.translate_content(name)
+            elif mapping_method == "mapping": 
+                name = self.mapping_to_english(name)
+            else:
+                pass
         else:
-            name = "unkown"
-        img_array = cv2.imdecode(np.fromfile(image, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+            print("Unknown Photo")
+            name = "unknown"
+        
+        img_array = face_recognition.load_image_file(image)
         image = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-        #name = " ".join(self.translate_content(name).split(" ")[:2])
-        # #Draw Rectangle
-        top_left = (face_location[3], face_location[0])
-        bottom_right = (face_location[1], face_location[2])
-        color = [0, 156, 0]
-        cv2.rectangle(image, top_left, bottom_right, color, frame_thickness)
-        #
-        # Draw Text
-        top_left = (face_location[3], face_location[2])
-        bottom_right = (face_location[1], face_location[2] + 22)
+        if face_location is not None: 
+            # #Draw Rectangle
+            top_left = (face_location[3], face_location[0])
+            bottom_right = (face_location[1], face_location[2])
+            color = [0, 156, 0]
+            cv2.rectangle(image, top_left, bottom_right, color, frame_thickness)
+            #
+            # Draw Text
+            top_left = (face_location[3], face_location[2])
+            bottom_right = (face_location[1], face_location[2] + 22)
+    
+            cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
+            cv2.putText(image, name, (face_location[3] + 10, face_location[2] + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        (200, 200, 200), font_thickness)
 
-        cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
-        cv2.putText(image, name, (face_location[3] + 10, face_location[2] + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    (200, 200, 200), font_thickness)
-
-        cv2.imshow(name, image)
-        cv2.waitKey(10000)
-        cv2.destroyWindow("window")
+        cv2.imshow("MafQud Recognition", image)
+        cv2.waitKey(5000)
+        cv2.destroyWindow("MafQud Recognition")

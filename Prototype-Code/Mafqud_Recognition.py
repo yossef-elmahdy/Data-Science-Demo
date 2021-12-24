@@ -151,32 +151,38 @@ class MafQudRecognition:
         return self.ids, self.people, self.features, self.face_location
 
 
-    def training_classifier(self, model_save_path=None, n_neighbors=None, knn_algo='ball_tree', verbose=False):
+    def training_classifier(self, model_save_path=None, train_test=True, n_neighbors=None, knn_algo='ball_tree', verbose=False):
         """
-        Compare and classify encodings.
+        Compare and classify encodings (with possibility to save it).
 
         Parameters
         ----------
-        ids : List
-            List of indices in people list
-        features : List
-            List of face encodings of each person
+        model_save_path : str
+            The path where the model will be saved in.
+        train_test : bool
+            Indicate wether you will train in all the data or you will make train test split for the data. 
         Returns
         -------
         knn_clf: model
-            Classifies images
+            The model that classifies images using KNN algorithm.
         """
         if n_neighbors is None:
             n_neighbors = int(round(math.sqrt(len(self.features))))
             if verbose:
                 print("Chose n_neighbors automatically:", n_neighbors)
-        X_train, X_test, y_train, y_test = train_test_split(self.features, self.ids, test_size=0.3,train_size=.7, random_state=42)
+        if train_test == True:
+            print("Trained in %70 of the data, and tested in %30, expected true accuracy")
+            X_train, X_test, y_train, y_test = train_test_split(self.features, self.ids, test_size=0.3,train_size=.7, random_state=42)
+        else: 
+            print("Trained in all data, expected %100 accuracy (not true)")
+            X_train, y_train = self.features, self.ids
+            X_test, y_test = self.features, self.ids
         print("Start trainging -------------------")
         t0 = time()
         self.knn_clf = neighbors.KNeighborsClassifier(n_neighbors=n_neighbors, algorithm=knn_algo, weights='distance')
         self.knn_clf.fit(X_train, y_train)
-        print(f"Accuracy:   {self.knn_clf.score(X_test, y_test)}")
-        print(f"Successfully trained  in : {time() - t0}s")
+        print("Accuracy:   %{:.2f}".format(self.knn_clf.score(X_test, y_test)*100))
+        print("Successfully trained  in : {:.2f}s".format(time() - t0))
         if model_save_path is not None:
             with open(model_save_path, 'wb') as f:
                 pickle.dump(self.knn_clf, f)

@@ -20,7 +20,7 @@ class MafQudRecognition:
         self.face_locations = []
         self.knn_clf = None
 
-    def import_encodings(self, ids_DIR='ids.npy', people_DIR='people.npy', fetaures_DIR='feature.npy', face_locations_DIR='face_location.npy'):
+    def import_data(self, ids_DIR='ids.npy', people_DIR='people.npy', fetaures_DIR='feature.npy', face_locations_DIR='face_location.npy'):
         """
         Import the .npy saved data to Mafqud_Recongition instance. 
 
@@ -55,30 +55,43 @@ class MafQudRecognition:
         print("Number of ids: {}".format(len(self.ids)))
         print("Number of face_locations: {}".format(len(self.face_locations)))
 
-    def append_encoding(self, imgDir, id, name):
-        img = face_recognition.load_image_file(imgDir)
-        face_locations = face_recognition.face_locations(img)
-        if len(face_locations) >= 1:
-            faces_encodings = face_recognition.face_encodings(img, known_face_locations=face_locations)
-        else:
-            print("No face detected")
-            return
+    def append_data(self, imgDir, name):
+        """
+        Append new data to the system data.
 
-        print(type(faces_encodings))
-        self.features = np.load('feature.npy', allow_pickle=True)
-        self.features = self.features.astype('float')
-        print(len(self.features))
-        self.features = np.vstack([self.features,np.array(faces_encodings)])
-        print(len(self.features))
-        self.ids = np.load('ids.npy', allow_pickle=True)
-        self.ids = self.ids.astype('str')
-        print(len(self.ids))
-        self.ids = np.append(self.ids, id)
-        print(len(self.ids))
-        self.people = np.load('people.npy', allow_pickle=True)
-        self.people = self.people.astype('str')
-        self.people = np.append(self.people, name)
-        #self.training_classifier("knn_model.clf", n_neighbors=2)
+        Parameters
+        ----------
+        imgDir : str
+            the directory of the images data.
+        name : str
+            name of the person to be appended.
+
+        Returns
+        -------
+        None.
+
+        """
+        face_location, face_encoding = self.detect_face_location(imgDir)
+        if face_location is not None: 
+            self.import_data()
+            if list(self.people).count(name) > 0: 
+                id = list(self.people).index(name)
+                self.ids = np.append(self.ids, id)
+            else:    
+                self.people = np.append(self.people, name)
+                id = len(self.people)-1
+                self.ids = np.append(self.ids, id)
+            self.features = np.vstack([self.features, np.array(face_encoding)])
+            print("Person: {} is appended in system data with id: {}".format(name, id))
+            print("="*70)
+            print("Data Summary: ")
+            print("Number of people: {}".format(len(self.people)))
+            print("Number of features: {}".format(len(self.features)))
+            print("Number of ids: {}".format(len(self.ids)))
+            print("Number of face_locations: {}".format(len(self.face_locations)))
+            print("="*70)
+            self.training_classifier()
+        
     
     def detect_face_location(self, image_path, searching_model="hog"):
         """
@@ -87,7 +100,7 @@ class MafQudRecognition:
         Parameters
         ----------
         image_path : str
-             The directory of the images data..
+             The directory of the images data.
          searching_model : str, optional 
             The method will be used to search for the location of the face. default is "hog". 
             Methods: 
@@ -369,7 +382,6 @@ class MafQudRecognition:
             else:
                 pass
         else:
-            print("Unknown Photo")
             name = "unknown"
         
         img_array = face_recognition.load_image_file(image)

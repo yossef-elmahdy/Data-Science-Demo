@@ -63,7 +63,7 @@ After storing each face as 128 encoding values ranging from -1 to 1, we now are 
 Each face enters the system either for storing or for querying about it go through our 5 steps, finally it gives one of the outputs:
 
 ### - Matching:
-If there is matching between the new photo and one (or some) of the stored photos, then it is the person we are searching for **(with accuracy = in our prototype demo).**
+If there is matching between the new photo and one (or some) of the stored photos, then it is the person we are searching for **(with accuracy = %82.0 in our prototype demo).**
 
 ![Matching Case Example 1](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/matching_case1.jpg)
 ![Matching Case Example 2](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/matching_case2.jpg)

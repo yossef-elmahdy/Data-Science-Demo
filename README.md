@@ -30,7 +30,7 @@ Our face recognition model is the second main part. The approach of recognizing 
 ### 1. Face detection model:
 We need first to detect the location of the face (or many faces) on a photo (i.e. the coordinates of the face(s) in the photo). That can be done using one of the two algorithms:
 
-- Histogram of Oriented Gradients (HOG) **[\[a method invented in 2005\]](https://eu9.proxysite.com/process.php?d=qkVpfs/WMdQcBqrdB72om7LlkrfjuOM5iBIHMGOFhQwQkZ5qKzwS04GgubW8Bw72D0ixPHuLABQ=&b=1)**: it is the older algorithm, so it is less accurate but yet faster than the other algorithm.
+- Histogram of Oriented Gradients (HOG) **[\[a method invented in 2005\]](hhttp://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf)**: it is the older algorithm, so it is less accurate but yet faster than the other algorithm.
 
 - Convolutional Neural Network (CNN): it is a way more accurate than HOG, but it is slower than it. **[based on ResNet-34 network architecture from “[Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)” paper by He et al]**.
 
@@ -40,7 +40,7 @@ We added to them "**the mixed method**" which makes use of the best of the two a
 
 
 ### 2. Face landmarks estimation: 
-We need second to mark the main points in the face which called in our case: landmarks, the more landmarks we target and capture, the more accurate to recognize someone in the photo. So, we capture 68 landmarks in the face (such that: chin, eyebrows, eyes, lips, …) **[\[using face landmark estimation algorithm invented 2014\]](https://eu9.proxysite.com/process.php?d=qkVpZd3AbZkGC/bfErn2jaTkirOtoO8yk1ESfmeSnhhYqdBgOzMIv5ORh%2bXkBB3kGQ==&b=1)**
+We need second to mark the main points in the face which called in our case: landmarks, the more landmarks we target and capture, the more accurate to recognize someone in the photo. So, we capture 68 landmarks in the face (such that: chin, eyebrows, eyes, lips, …) **[\[using face landmark estimation algorithm invented 2014\]](https://www.csc.kth.se/~vahidk/papers/KazemiCVPR14.pdf)**
 
 ![Ideal Landmarks](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/face_landmarks.png)
 

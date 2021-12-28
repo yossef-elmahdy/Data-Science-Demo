@@ -81,26 +81,14 @@ There is a possibility that the user by mistake queries for a photo that doesnâ€
 
 ## MafQud Recognition Overview Chart
 ### Storing Images (creating encodings)
-```mermaid
-graph LR
-A((Image)) -- "Search for faces [HOG-CNN]" --> B[Face Detection]
-B --> C{"found face(s)"}
-C -- "Yes" --> D[Landmarks Estimation]
-C -- "No" --> F[No Face Detected]
-D --> G[Face Alignment]
-G --> H[Face Encoding]
-```
+
+![Storing Images Flowchart](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/flow_chart1.jpg)
+
 
 ### Query New Images (searching for matching) 
-```mermaid
-graph LR
-A((New Image Encoding)) -- "Search for matching [KNN]" --> B((Stored Images Encoding))
-B --> C{"Matching"}
-C -- "Yes" --> D[Return Name of Matching]
-C -- "No" --> E[Return Unknown]
-E -- "Ask for name" --> F[Add & Re-train] 
 
-```
+![Query New Images Flowchart](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/flow_chart2.jpg)
+
 
 ## References
 - [Face recognition library documentation](https://face-recognition.readthedocs.io/en/latest/readme.html). 

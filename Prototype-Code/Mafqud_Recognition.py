@@ -7,8 +7,8 @@ from time import time
 import face_recognition
 from sklearn import neighbors
 from translate import Translator
-from sklearn.model_selection import train_test_split
 from arabic_content import ARABIC_MAPPING
+from sklearn.model_selection import train_test_split
 from face_recognition.face_recognition_cli import image_files_in_folder
 
 
@@ -44,7 +44,7 @@ class MafQudRecognition:
         self.people = np.load(people_DIR, allow_pickle=True)
         self.people = self.people.astype('str')
         self.features = np.load(fetaures_DIR, allow_pickle=True)
-        self.features= self.features.astype('float')
+        self.features = self.features.astype('float')
         self.face_locations = np.load(face_locations_DIR, allow_pickle=True)
         self.face_locations = list(self.face_locations)
         print("Data imported successfully!")
@@ -73,11 +73,11 @@ class MafQudRecognition:
         """
         face_location, face_encoding = self.detect_face_location(imgDir)
         if face_location is not None: 
-            self.import_data()
+            self.import_data()   ## ToDo in future (if the data not found) 
             if list(self.people).count(name) > 0: 
                 id = list(self.people).index(name)
                 self.ids = np.append(self.ids, id)
-            else:    
+            else:
                 self.people = np.append(self.people, name)
                 id = len(self.people)-1
                 self.ids = np.append(self.ids, id)
@@ -90,7 +90,7 @@ class MafQudRecognition:
             print("Number of ids: {}".format(len(self.ids)))
             print("Number of face_locations: {}".format(len(self.face_locations)))
             print("="*70)
-            self.training_classifier()
+            self.training_classifier(train_test=False)
         
     
     def detect_face_location(self, image_path, searching_model="hog"):
@@ -191,7 +191,7 @@ class MafQudRecognition:
         print("="*70)
         print("Data Summary: ")
         print("Number of people: {}".format(len(self.people)))
-        print("Number of features: {}".fromat(len(self.features)))
+        print("Number of features: {}".format(len(self.features)))
         print("Number of ids: {}".format(len(self.ids)))
         print("Number of face_locations: {}".format(len(self.face_locations)))
         print("="*70)
@@ -205,10 +205,10 @@ class MafQudRecognition:
 
         Parameters
         ----------
-        model_save_path : str
-            The path where the model will be saved in.
-        train_test : bool
-            Indicate wether you will train in all the data or you will make train test split for the data. 
+        model_save_path : str, optional
+            The path where the model will be saved in. default is None. 
+        train_test : bool, optional
+            Indicate wether you will train in all the data or you will make train test split for the data. default is True.
         Returns
         -------
         knn_clf: model

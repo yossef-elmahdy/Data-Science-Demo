@@ -45,8 +45,8 @@ class MafQudRecognition:
         self.people = self.people.astype('str')
         self.features = np.load(fetaures_DIR, allow_pickle=True)
         self.features = self.features.astype('float')
-        self.face_locations = np.load(face_locations_DIR, allow_pickle=True)
-        self.face_locations = list(self.face_locations)
+        # self.face_locations = np.load(face_locations_DIR, allow_pickle=True)
+        # self.face_locations = list(self.face_locations) # ToDo in future
         print("Data imported successfully!")
         print("="*70)
         print("Data Summary: ")
@@ -71,27 +71,30 @@ class MafQudRecognition:
         None.
 
         """
-        face_location, face_encoding = self.detect_face_location(imgDir)
-        if face_location is not None: 
-            self.import_data()   ## ToDo in future (if the data not found) 
-            if list(self.people).count(name) > 0: 
-                id = list(self.people).index(name)
-                self.ids = np.append(self.ids, id)
-            else:
+        self.import_data() # ToDo in future (if the data not found)
+        id_ = len(self.people)
+        for img in os.listdir(imgDir):
+            path = os.path.join(imgDir, img)
+            face_location, face_encoding = self.detect_face_location(path)
+            if face_location is not None:
                 self.people = np.append(self.people, name)
-                id = len(self.people)-1
-                self.ids = np.append(self.ids, id)
-            self.features = np.vstack([self.features, np.array(face_encoding)])
-            print("Person: {} is appended in system data with id: {}".format(name, id))
-            print("="*70)
-            print("Data Summary: ")
-            print("Number of people: {}".format(len(self.people)))
-            print("Number of features: {}".format(len(self.features)))
-            print("Number of ids: {}".format(len(self.ids)))
-            print("Number of face_locations: {}".format(len(self.face_locations)))
-            print("="*70)
-            self.training_classifier(train_test=False)
-        
+                self.ids = np.append(self.ids, id_)
+                self.features = np.vstack([self.features, np.array(face_encoding)])
+
+        np.save('face_locations.npy', np.array(self.face_locations, dtype=object))
+        np.save('feature.npy', np.array(self.features, dtype=float))
+        np.save('ids.npy', np.array(self.ids, dtype=str))
+        np.save('people.npy', np.array(self.people, dtype=str))
+        print("Person: {} is appended in system data with id: {}".format(name, id_))
+        print("="*70)
+        print("Data Summary: ")
+        print("Number of people: {}".format(len(self.people)))
+        print("Number of features: {}".format(len(self.features)))
+        print("Number of ids: {}".format(len(self.ids)))
+        print("Number of face_locations: {}".format(len(self.face_locations)))
+        print("="*70)
+        self.training_classifier(model_save_path='knn_model.clf', train_test=False)
+
     
     def detect_face_location(self, image_path, searching_model="hog"):
         """
@@ -120,13 +123,13 @@ class MafQudRecognition:
         if searching_model == "mix":
             print("Try first with hog ...")
             face_coordinates = face_recognition.face_locations(image, model="hog")
-            if len(face_coordinates) >= 1: 
+            if len(face_coordinates) == 1:
                 face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)
                 return face_coordinates, face_encoding
             else:
                 print("Not detected with hog, try again with cnn ...")
                 face_coordinates = face_recognition.face_locations(image, model="cnn")
-                if len(face_coordinates) >= 1: 
+                if len(face_coordinates) == 1:
                     face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates)
                     return face_coordinates, face_encoding
                 else: 
@@ -134,7 +137,7 @@ class MafQudRecognition:
                     return None, None
         else: 
             face_coordinates = face_recognition.face_locations(image, model=searching_model)
-            if len(face_coordinates) >= 1: 
+            if len(face_coordinates) == 1:
                 face_encoding = face_recognition.face_encodings(image, known_face_locations=face_coordinates) ###
                 return face_coordinates, face_encoding
             else: 
@@ -214,6 +217,7 @@ class MafQudRecognition:
         knn_clf: model
             The model that classifies images using KNN algorithm.
         """
+        print(len(self.features))
         if n_neighbors is None:
             n_neighbors = int(round(math.sqrt(len(self.features))))
             if verbose:
@@ -229,7 +233,7 @@ class MafQudRecognition:
         t0 = time()
         self.knn_clf = neighbors.KNeighborsClassifier(n_neighbors=n_neighbors, algorithm=knn_algo, weights='distance')
         self.knn_clf.fit(X_train, y_train)
-        print("Accuracy:   %{:.2f}".format(self.knn_clf.score(X_test, y_test)*100))
+        #print("Accuracy:   %{:.2f}".format(self.knn_clf.score(X_test, y_test)*100))
         print("Successfully trained  in : {:.2f}s".format(time() - t0))
         if model_save_path is not None:
             with open(model_save_path, 'wb') as f:
@@ -237,7 +241,7 @@ class MafQudRecognition:
 
         return self.knn_clf
 
-    def predict(self, unkown_img_path, model_path=None, face_loc_model="hog", distance_threshold=0.6):
+    def predict(self, unkown_img_path, model_path=None, face_loc_model="hog", distance_threshold=0.4):
         """
         Recognize the person in picture.
 
@@ -402,5 +406,5 @@ class MafQudRecognition:
                         (200, 200, 200), font_thickness)
 
         cv2.imshow("MafQud Recognition", image)
-        cv2.waitKey(5000)
+        cv2.waitKey(6000)
         cv2.destroyWindow("MafQud Recognition")

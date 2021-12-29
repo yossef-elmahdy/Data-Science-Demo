@@ -36,13 +36,20 @@ We need first to detect the location of the face (or many faces) on a photo (i.e
 
 We added to them "**the mixed method**" which makes use of the best of the two algorithms.
 
-![HOG](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/hog.png)
+<p align="center">
+  <img src="https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/hog.png" alt="HOG"/>
+</p>
 
 
 ### 2. Face landmarks estimation: 
 We need second to mark the main points in the face which called in our case: landmarks, the more landmarks we target and capture, the more accurate to recognize someone in the photo. So, we capture 68 landmarks in the face (such that: chin, eyebrows, eyes, lips, …) **[\[using face landmark estimation algorithm invented 2014\]](https://www.csc.kth.se/~vahidk/papers/KazemiCVPR14.pdf)**
 
-![Ideal Landmarks](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/face_landmarks.png)
+
+<p align="center">
+  <img src="https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/face_landmarks.png" alt="Ideal Landmarks"/>
+</p>
+
+
 
 
 ### 3. Face alignment: 
@@ -52,7 +59,10 @@ According to the landmarks that are captured from the face, we compare them with
 ### 4. Face encoding: 
 Last step is to encode the 68 landmarks to be almost unique for the person. Unfortunately, they can’t be interpreted or said that they represent something in the photo as they are the output of a neural network. Now instead of storing the whole photo with its big size of pixels, we just store the 128 encoding numbers ranging from -1 to 1. That is more computational-saving approach and more efficient for space and time.
 
-![Face Encoding Example](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/face_encoding.jpg)
+<p align="center">
+  <img src="https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/face_encoding.jpg" alt="Face Encoding Example"/>
+</p>
+
 
 ### 5. Face comparing model: 
 After storing each face as 128 encoding values ranging from -1 to 1, we now are able to compare our stored faces with the new photos that are queried, all what we need is to go through the last 4 steps with the new photo to find the 128-encoding value of the face on it, then we compare them with the stored ones by determining the distance between them and it is more probable that the nearest face of it is the targeted face. That is exactly what our K-Nearest Neighbors (KNN) model does.
@@ -65,19 +75,34 @@ Each face enters the system either for storing or for querying about it go throu
 ### - Matching:
 If there is matching between the new photo and one (or some) of the stored photos, then it is the person we are searching for **(with accuracy = %82.0 in our prototype demo).**
 
-![Matching Case Example 1](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/matching_case1.jpg)
-![Matching Case Example 2](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/matching_case2.jpg)
+<p align="center">
+  <img src="https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/matching_case1.jpg" alt="Matching Case Example 1"/>
+</p>
+
+<p align="center">
+  <img src="https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/matching_case2.jpg" alt="Matching Case Example 2"/>
+</p>
+
 
 ### - Unknown:
 If there is no matching happened, then it is a new unknown face to our system model, then we need to store and retrain our model on it in case of future cases.
 
-![Unknown Case Example 2](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/unknown_case3.jpg)
-![Asking for storing](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/unknown_message.jpg)
+<p align="center">
+  <img src="https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/unknown_case3.jpg" alt="Unknown Case Example/>
+</p>
+
+<p align="center">
+  <img src="https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/unknown_message.jpg" alt="Asking for storing"/>
+</p>
+
 
 ### - No Face Detected:
 There is a possibility that the user by mistake queries for a photo that doesn’t contain a human face at all (photo of dog, photo of nature, …) or even he/she queries for a low-pixeled (i.e., low resolution) photo that is difficult to capture the face on it.
 
-![No Face Detcted Case Example](https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/face_not_detcted.jpg)
+<p align="center">
+  <img src="https://github.com/yossef-elmahdy/Data-Science-Demo/blob/main/Screenshots/face_not_detcted.jpg" alt="No Face Detcted Case Example"/>
+</p>
+
 
 ## MafQud Recognition Overview Chart
 ### Storing Images (creating encodings)

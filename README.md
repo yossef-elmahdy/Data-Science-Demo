@@ -7,6 +7,47 @@ One of the core parts of MafQud project is the tasks and work that are associate
 
 And if there is another model (e.g., **GANs**, **Speech-to-Text**, …) as upcoming features.
 
+## Project Structure 
+```
+├───Data-Scraping
+│   │   arabic_content.py
+│   │   Atfal_Facebook_Scrapping.py
+│   │   Atfal_Website_Scrapping.py
+│   │
+│   └───Scrapped-Data
+│           missing_people.json
+│           scrapped_data.csv
+│           scrapped_data.xlsx
+│
+└───Prototype-Code
+    │   arabic_content.py
+    │   face_location.npy
+    │   face_locations.npy
+    │   feature.npy
+    │   ids.npy
+    │   knn_clf.clf
+    │   Mafqud_Recognition.py
+    │   main.py
+    │   people.npy
+    │
+    ├───Saved-Data
+    │   │   face_location.npy
+    │   │   feature.npy
+    │   │   ids.npy
+    │   │   knn_model.clf
+    │   │   people.npy
+    │   │
+    │   └───Well_Trained
+    │           face_location.npy
+    │           feature.npy
+    │           ids.npy
+    │           knn_clf.clf
+    │           people.npy
+    │
+    └───__pycache__
+            arabic_content.cpython-38.pyc
+            Mafqud_Recognition.cpython-38.pyc
+ ```
 ## Data Scrapping:
 
 We need to find a specific data for our model, our target data should contain at least: photos of the missing people, and their names associated to each photo.

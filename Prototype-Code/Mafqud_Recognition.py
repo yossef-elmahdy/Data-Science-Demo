@@ -19,6 +19,9 @@ class MafQudRecognition:
         self.ids = []
         self.face_locations = []
         self.knn_clf = None
+        
+    def __str__(self): 
+        return self.knn_clf
 
     def import_data(self, ids_DIR='ids.npy', people_DIR='people.npy', fetaures_DIR='feature.npy', face_locations_DIR='face_location.npy'):
         """
@@ -95,7 +98,6 @@ class MafQudRecognition:
         print("="*70)
         self.training_classifier(model_save_path='knn_model.clf', train_test=False)
 
-    
     def detect_face_location(self, image_path, searching_model="hog"):
         """
         Detect the face location and return the location and encoding. 
@@ -142,8 +144,7 @@ class MafQudRecognition:
                 return face_coordinates, face_encoding
             else: 
                 print("No face detected with ({}) model".format(searching_model))
-                return None, None
-                    
+                return None, None                
             
     def create_data(self, images_DIR, face_loc_model="hog"):
         """
@@ -201,7 +202,6 @@ class MafQudRecognition:
         print("Data is successfully created and loaded in : {:.2f}s".format(time()-t0))
         return self.ids, self.people, self.features, self.face_locations
 
-
     def training_classifier(self, model_save_path=None, train_test=True, n_neighbors=None, knn_algo='ball_tree', verbose=False):
         """
         Compare and classify encodings (with possibility to save it).
@@ -238,7 +238,6 @@ class MafQudRecognition:
         if model_save_path is not None:
             with open(model_save_path, 'wb') as f:
                 pickle.dump(self.knn_clf, f)
-
         return self.knn_clf
 
     def predict(self, unkown_img_path, model_path=None, face_loc_model="hog", distance_threshold=0.4):
@@ -286,13 +285,10 @@ class MafQudRecognition:
                 print("Finshed searching in {:.2f}s".format(time()-t0))
                 print("Found person with id: {}".format(matching[0][0]))
                 print("Name: {}".format(self.people[int(matching[0][0])]))
-                
             return matching
         else: 
             return -1
         
-        
-          
     def mapping_to_english(self, name):
         """
          Mapping the Arabic name to English using list of 
@@ -317,7 +313,6 @@ class MafQudRecognition:
                 mapped_name += c
         
         return mapped_name.title()
-
 
     def translate_content(self, name_english, from_language='ar', to_language='en'):
         """
@@ -346,7 +341,6 @@ class MafQudRecognition:
         name_translated = translator.translate(name_english)
 
         return name_translated
-
 
     def draw_box(self, image, face_location=None, nameId=None, unknown=False, mapping_method="translating", frame_thickness=3, font_thickness=2):
         """

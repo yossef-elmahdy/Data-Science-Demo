@@ -1,11 +1,10 @@
 import time
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from arabic_content import ARABIC_MAPPING, GOVS_MAPPING, EGYPT_GOVS
+from arabic_content import ARABIC_MAPPING, GOVS_MAPPING_V2
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-
 
 
 DRIVER_PATH = 'C:/Users/yosse/chromedriver.exe'
@@ -13,15 +12,20 @@ USERNAME = "yossefalmahdey322@gmail.com"
 PASSWORD = "*****"
 
 # Our target pages from albums: https://www.facebook.com/atfalmafkoda/photos/?ref=page_internal
-PAGE_MISSING = "https://www.facebook.com/media/set/?set=a.1499129867051302&type=3" #أطفال مفقودة
-PAGE_FINDING = "https://www.facebook.com/media/set/?set=a.1540857199545235&type=3" #يبحثون عن أهاليهم
-PAGE_MISSED = "https://www.facebook.com/media/set/?set=a.1544835639147391&type=3" #متغيبين ومفقودين
 
+# أطفال مفقودة
+PAGE_MISSING = "https://www.facebook.com/media/set/?set=a.1499129867051302&type=3"
+
+# يبحثون عن أهاليهم
+PAGE_FINDING = "https://www.facebook.com/media/set/?set=a.1540857199545235&type=3"
+
+# متغيبين ومفقودين
+PAGE_MISSED = "https://www.facebook.com/media/set/?set=a.1544835639147391&type=3"
 
 
 # Disable chrome notifications
 chrome_options = webdriver.ChromeOptions()
-prefs = {"profile.default_content_setting_values.notifications" : 2}
+prefs = {"profile.default_content_setting_values.notifications": 2}
 chrome_options.add_experimental_option("prefs", prefs)
 
 
@@ -41,14 +45,12 @@ def define_webDriver(driver_path):
 
     """
     try:
-        #specify the path to chromedriver.exe (download and save on your computer)
+        # specify the path to chromedriver.exe (download and save on your computer)
         driver = webdriver.Chrome(driver_path, chrome_options=chrome_options)
 
         return driver
     except:
         print("No Internet Connection")
-
-
 
 
 def facebook_login(driver, username, password):
@@ -71,23 +73,28 @@ def facebook_login(driver, username, password):
     """
 
     try:
-        # open the webpage
+        # Open the webpage
         driver.get("http://www.facebook.com")
 
-        #target username (fill in the username and password imputs)
-        user_name = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email']")))
-        pass_word = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='pass']")))
+        # Select credentail fields
+        user_name = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email']")))
+        pass_word = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='pass']")))
 
-        #enter username and password
+        # Enter credentails
         user_name.clear()
         user_name.send_keys(username)
+
         pass_word.clear()
         pass_word.send_keys(password)
 
-        #target the login button and click it
-        button = WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))).click()
+        # Click login button
+        WebDriverWait(driver, 2).until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, "button[type='submit']"))).click()
 
         print("We are logged in!")
+
     except:
         print("No Internet Connection")
 
@@ -112,8 +119,10 @@ def scroll_to_end(driver, scroll_pause_time=5):
     last_height = driver.execute_script("return document.body.scrollHeight")
 
     while True:
+
         # Scroll down to bottom
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        driver.execute_script(
+            "window.scrollTo(0, document.body.scrollHeight);")
 
         # Wait to load page
         time.sleep(scroll_pause_time)
@@ -123,7 +132,6 @@ def scroll_to_end(driver, scroll_pause_time=5):
         if new_height == last_height:
             break
         last_height = new_height
-
 
 
 # Note: Scroll on the page till the end of the page to be able to get back all photos
@@ -165,73 +173,76 @@ def scrape_page(driver, page, limit=-1, endless_scroll=False, wait_time=20):
         # Scroll to the end of the page (doesn't work on our pages cause they have two scrollbars)
         scroll_to_end(driver, 10)
 
-    scrapped_images_links = []       # List of links of the scrapped images
-    scrapped_names_ar = []           # List of scrapped names in Arabic (need some cleaning)
-    scrapped_govs_ar = []            # List of scrapped govs (if exist) in Arabic
+    # List of links of the scrapped images
+    scrapped_images_links = []
+
+    # List of scraped names in Arabic (require cleaning/normalizing)
+    scrapped_names_ar = []
+
+    # List of scraped governorates (if exist) in Arabic
+    scrapped_govs_ar = []
 
     cnt = 0
 
-    # Return all <a> tags that have href as an attribute and particullarly that have the
+    # Return all <a> tags that have href as an attribute and particularly that have the
     # href (link) of the photo
     anchors = driver.find_elements_by_tag_name('a')
     anchors = [a.get_attribute('href') for a in anchors]
-    anchors = [a for a in anchors if str(a).startswith("https://www.facebook.com/atfalmafkoda/photos/a")]
+    anchors = [a for a in anchors if str(a).startswith(
+        "https://www.facebook.com/atfalmafkoda/photos/a")]
 
     print('Found ' + str(len(anchors)) + ' links to images')
 
     if limit == -1:
         limit = len(anchors)
 
-    # Looping over the links of the images saved in anchors to retrieve the photos and information
+    # Retrieve photos & information
     for anchor in anchors[0:limit]:
-        driver.get(anchor) #navigate to the link
-        time.sleep(wait_time) #wait a bit (till the content of the page loads)
-        img = driver.find_elements_by_tag_name("img")
+        driver.get(anchor)
+        time.sleep(wait_time)
+        imgs = driver.find_elements_by_tag_name("img")
 
         # Goal: Find the photos that their src starts with: https://scontent.fcai21
         img_tmp = []
-        for m in img:
-            s = m.get_attribute("src")
-            if(s.find("https://scontent.fcai21") >= 0):
-                #print(s)
-                img_tmp.append(s)
-        #for m in img:
-        #    print(m.get_attribute("src"))
+        for img in imgs:
+            s = img.get_attribute("src")
+            if "https://scontent.fcai21" in s:
+                img_tmp.append(img)
 
         try:
-            # first match is our GOAL (index = 0)
-            scrapped_images_links.append(img_tmp[0]) #may change in future to img[?]
+            # First match is our GOAL (index = 0)
+            # May change in future to img[?]
+            scrapped_images_links.append(img_tmp[0])
 
             # For Debugging and ensure that the link is the photo link
-            print("Image {} Link: {}".format(cnt+1, img_tmp[0]))
+            print(f"Image {cnt+1} Link: {img_tmp[0]}")
             cnt += 1
-        except:
-            print("Image Error")
 
+        except IndexError:
+            print("Image not found")
 
+        # Fetching the <span> tag
+        span = driver.find_element_by_xpath(
+            "//span[@class='d2edcug0 hpfvmrgz qv66sw1b c1et5uql lr9zc1uh a8c37x1j keod5gw0 nxhoafnm aigsh9s9 d3f4x2em fe6kdd0r mau55g9w c8b282yb iv3no6db gfeo3gy3 a3bd9o3v b1v8xokw oo9gr5id']")
 
-        # Getting the <span> tag
-        span = driver.find_element_by_xpath("//span[@class='d2edcug0 hpfvmrgz qv66sw1b c1et5uql lr9zc1uh a8c37x1j keod5gw0 nxhoafnm aigsh9s9 d3f4x2em fe6kdd0r mau55g9w c8b282yb iv3no6db gfeo3gy3 a3bd9o3v b1v8xokw oo9gr5id']")
-
-        # Getting the name
+        # Fetch case name
         post_content = span.get_attribute("innerHTML")
         missing_name = post_content[0:post_content.index("<")]
-        print("Name: {}".format(missing_name))
+        print(f"Name: {missing_name}")
 
         scrapped_names_ar.append(missing_name)
 
-        #Getting the government (if exist)
+        # Getting the government (if exist)
         found = False
-        for gov in EGYPT_GOVS:
-            if (post_content.find(gov) >= 0):
-                print("Found gov: {}".format(gov))
+        for gov in GOVS_MAPPING_V2:
+            if gov in post_content:
+                print(f"Found gov: {gov}")
                 scrapped_govs_ar.append(gov)
                 found = True
                 break
-        if (found == False):
+        if found == False:
             print("Gov Not Found")
             scrapped_govs_ar.append("مفقود")
-
 
         print("==================================================================")
         print("==================================================================")
@@ -270,6 +281,7 @@ def translate_content(contents, from_language='ar', to_language='en'):
 
     return contents_translated
 
+
 def mapping_names_to_english(names):
     """
      Mapping the Arabic names to English using list of
@@ -286,44 +298,30 @@ def mapping_names_to_english(names):
         list of mapped names.
 
     """
-    names_mapped = []
-    for name in names:
-       mapped_name = ""
-       for c in name:
-           try:
-               mapped_name += ARABIC_MAPPING[c]
-           except:
-               mapped_name += c
-       names_mapped.append(mapped_name.title())
+    def map_name(name):
+        return ''.join([ARABIC_MAPPING.get(ch, ' ') for ch in name])
 
-    return names_mapped
+    return [map_name(name).title() for name in names]
 
-def mapping_govs_to_english(govs):
+
+def map_gov(gov):
     """
-    Mapping the Arabic govs to English using list of
-    pre-written dict according to GOVS_MAPPING.
+    Maps given governorate names to english normailzed one.
 
     Parameters
     ----------
-    govs : list
-        list of Arabic govs to be mapped.
+    gov : str
+        scraped unclean governorate name.
 
     Returns
     -------
-    govs_mapped : list
-        list of mapped govs.
-
+    normilzed_gov : str
+        normailzed governorate name.
     """
-    govs_mapped = []
-    for gov in govs:
-        try:
-            govs_mapped.append(GOVS_MAPPING[gov])
-        except:
-            print("Error while mapping")
-            govs_mapped.append(gov)
 
-
-    return govs_mapped
+    for root in GOVS_MAPPING_V2:
+        if root in gov:
+            return GOVS_MAPPING_V2[root]
 
 
 def save_csv(save_path, names_en, names_ar, govs_en, govs_ar, images_links, anchors):
@@ -357,14 +355,18 @@ def save_csv(save_path, names_en, names_ar, govs_en, govs_ar, images_links, anch
 
     with open(save_path, "w") as scrapped_csv:
         wr = csv.writer(scrapped_csv)
-        wr.writerow(["English_Name", "Arabic_Name", "English_Government", "Arabic_Govrnment", "Image_Link", "Post_Link"])
+        wr.writerow(["English_Name", "Arabic_Name", "English_Government",
+                    "Arabic_Govrnment", "Image_Link", "Post_Link"])
+
         for i in range(len(images_links)):
             try:
-                wr.writerow([names_en[i], names_ar[i], govs_en[i], govs_ar[i], images_links[i], anchors[i]])
+                wr.writerow([names_en[i], names_ar[i], govs_en[i],
+                            govs_ar[i], images_links[i], anchors[i]])
             except:
                 print("Error In Row: " + str(i))
 
     print("The CSV file is Saved Successfully in: {}".format(save_path))
+
 
 def prepare_down_names(names_en):
     """
@@ -385,18 +387,20 @@ def prepare_down_names(names_en):
     names_down = []
     counter = 1
     for n in names_en:
-        n = n.replace(".", "").replace(":", "").replace("?","").replace("*","").replace("//", "").replace("<", "").replace(">", "")
+        n = n.replace(".", "").replace(":", "").replace("?", "").replace(
+            "*", "").replace("//", "").replace("<", "").replace(">", "")
         l = n.split(" ")
         # print(l)
-        if(len(l) >= 3):
+        if len(l) >= 3:
             names_down.append(l[0] + "_" + l[1] + "_" + l[2])
-        elif(len(l) >= 2):
+        elif len(l) >= 2:
             names_down.append(l[0] + "_" + l[1])
         else:
             names_down.append(l[0] + str(counter))
             counter += 1
 
     return names_down
+
 
 def download_images(images_links, names_down):
     """
@@ -471,7 +475,8 @@ def pickle_scrapped_data(save_path, names_en, names_ar, names_down, govs_en, gov
     # Saving My Lists in pickles
 
     import pickle
-    file_list = [names_en, names_ar, names_down, govs_en, govs_ar, images_links, anchors]
+    file_list = [names_en, names_ar, names_down,
+                 govs_en, govs_ar, images_links, anchors]
 
     with open(save_path, 'wb') as f:
         pickle.dump(file_list, f)
@@ -486,18 +491,29 @@ if __name__ == '__main__':
     """
     DRIVER_PATH = 'C:/Users/yosse/chromedriver.exe'
     driver = define_webDriver(DRIVER_PATH)
+
     if driver is not None:
         t0 = time()
         USERNAME = input("Enter your Facebook username: ")
-        PASSWORD = input("Enter your Facebook passwrod: ")
+        PASSWORD = input("Enter your Facebook password: ")
+
         facebook_login(driver, USERNAME, PASSWORD)
-        names_ar, govs_ar, image_links, anchors = scrape_page(driver, page=PAGE_MISSING, limit=10, endless_scroll=False)  # You can change the page scrapped
-        names_en = mapping_names_to_english(names_ar) # Can be translate content
-        govs_en = mapping_govs_to_english(govs_ar)
-        SAVE_PATH = './Scrapped_Data'  # You may need to change the SAVE_DIR to another directory
-        save_csv(SAVE_PATH, names_en, names_ar, govs_en, govs_ar, image_links, anchors)
+        names_ar, govs_ar, image_links, anchors = scrape_page(
+            driver, page=PAGE_MISSING, limit=10, endless_scroll=False)  # You can change the page scrapped
+        names_en = mapping_names_to_english(
+            names_ar)  # Can be translate content
+
+        govs_en = [map_gov(gov) for gov in govs_ar]
+
+        # You may need to change the SAVE_DIR to another directory
+        SAVE_PATH = './Scrapped_Data'
+        save_csv(SAVE_PATH, names_en, names_ar,
+                 govs_en, govs_ar, image_links, anchors)
+
         names_down = prepare_down_names(names_en)
         download_images(image_links, names_down)
-        pickle_scrapped_data(SAVE_PATH, names_en, names_ar, names_down, govs_en, govs_ar, image_links, anchors)
+        pickle_scrapped_data(SAVE_PATH, names_en, names_ar,
+                             names_down, govs_en, govs_ar, image_links, anchors)
+
         print("Finished scrapping and saving in {:.2f}s".fromat(time()-t0))
         print("Thank you for your patience!")

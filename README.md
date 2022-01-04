@@ -20,31 +20,31 @@ And if there is another model (e.g., **GANs**, **Speech-to-Text**, …) as upcom
 │           scrapped_data.csv
 │           scrapped_data.xlsx
 │
-├───Prototype-Code
-│   │   arabic_content.py
-│   │   knn_model.clf
-│   │   Mafqud_Recognition.py
-│   │   main.py
-│   │
-│   ├───Saved-Data
-│   │   │   face_locations.npy
-│   │   │   feature.npy
-│   │   │   ids.npy
-│   │   │   knn_model.clf
-│   │   │   people.npy
-│   │   │
-│   │   └───Well_Trained
-│   │           face_location.npy
-│   │           feature.npy
-│   │           ids.npy
-│   │           knn_clf.clf
-│   │           people.npy
-│   │
-│   └───__pycache__
-│           arabic_content.cpython-38.pyc
-│           arabic_content.cpython-39.pyc
-│           Mafqud_Recognition.cpython-38.pyc
-│           Mafqud_Recognition.cpython-39.pyc
+└────Prototype-Code
+   │   arabic_content.py
+   │   knn_model.clf
+   │   Mafqud_Recognition.py
+   │   main.py
+   │
+   ├───Saved-Data
+   │   │   face_locations.npy
+   │   │   feature.npy
+   │   │   ids.npy
+   │   │   knn_model.clf
+   │   │   people.npy
+   │   │
+   │   └───Well_Trained
+   │           face_location.npy
+   │           feature.npy
+   │           ids.npy
+   │           knn_clf.clf
+   │           people.npy
+   │
+   └───__pycache__
+           arabic_content.cpython-38.pyc
+           arabic_content.cpython-39.pyc
+           Mafqud_Recognition.cpython-38.pyc
+           Mafqud_Recognition.cpython-39.pyc
  ```
 ## Data Scrapping:
 
